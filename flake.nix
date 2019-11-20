@@ -132,6 +132,8 @@
     checks.x86_64-linux.patchelf = self.testPkgs.patchelf-new;
     checks.x86_64-linux.trivial = self.testPkgs.trivial;
     checks.x86_64-linux.nixUnstable = self.testPkgs.nixUnstable;
+    checks.x86_64-linux.trivial_f90 = self.testPkgs.trivial_f90;
+    checks.x86_64-linux.submodules_f90 = self.testPkgs.submodules_f90;
 
     defaultPackage.x86_64-linux = self.testPkgs.nix-ccache;
 
