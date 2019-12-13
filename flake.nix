@@ -122,6 +122,18 @@
               '';
             };
 
+            hdf5 = prev.hdf5.overrideDerivation (attrs: {
+              stdenv = final.nix-ccacheStdenv;
+              requiredSystemFeatures = [ "recursive-nix" ];
+            });
+
+            hdf5-fortran = (prev.hdf5-fortran.override {
+              gfortran = final.nix-fcache;
+            }).overrideDerivation (attrs: {
+              stdenv = final.nix-ccacheStdenv;
+              requiredSystemFeatures = [ "recursive-nix" ];
+            });
+
 
           })
         ];
