@@ -3,6 +3,8 @@
 
   edition = 201909;
 
+  inputs.nixpkgs.uri = "github:dguibert/nixpkgs/pu";
+
   outputs = { self, nixpkgs }: {
 
     overlay = final: prev: {
