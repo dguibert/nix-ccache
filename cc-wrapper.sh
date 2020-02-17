@@ -65,6 +65,13 @@ fi
 #echo "compiling to $dest..."
 
 escapedArgs='"-o" "${placeholder "out"}" "-c" '$(readlink -f "$dest.$ext")' '
+# FIXME: add any store paths mentioned in the arguments (e.g. -B
+# flags) to the input closure, or filter them?
+args_B="$(ls -d @next@/libexec/gcc/x86_64-unknown-linux-gnu/*)"
+args_B="${args_B:+"-B${args_B}"}"
+
+escapedArgs=''$escapedArgs' "'$args_B'" '
+
 
 for arg in "${compileFlags[@]}"; do
     escapedArgs+='"'
@@ -74,16 +81,13 @@ done
 
 #echo "FINAL: $escapedArgs"
 
-# FIXME: add any store paths mentioned in the arguments (e.g. -B
-# flags) to the input closure, or filter them?
-
 @nix@/bin/nix-build --quiet -o "$dest.link" -E '(
   derivation {
     name = "cc";
     system = "@system@";
     builder = builtins.storePath "@next@/bin/@program@";
     extra = builtins.storePath "@binutils@";
-    args = [ '"$escapedArgs"' "-B@next@/libexec/gcc/x86_64-unknown-linux-gnu/8.3.0/" "-B@binutils@/bin" ]; # FIXME
+    args = [ '"$escapedArgs"' "-B@binutils@/bin" ]; # FIXME
   }
 )' > /dev/null
 
