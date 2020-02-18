@@ -93,8 +93,8 @@
               requiredSystemFeatures = [ "recursive-nix" ];
               buildCommand = ''
                 mkdir -p $out/bin
-                g++ -o hello.o -c ${./hello.cc} -DWHO='"World"' -std=c++11
-                g++ -o $out/bin/hello hello.o
+                $CXX -o hello.o -c ${./hello.cc} -DWHO='"World"' -std=c++11
+                $CXX -o $out/bin/hello hello.o
                 $out/bin/hello
               '';
             };
@@ -105,8 +105,8 @@
               buildInputs = [ final.nix-fcache ];
               buildCommand = ''
                 mkdir -p $out/bin
-                gfortran -o hello.o -c ${./hello.f90}
-                gfortran -o $out/bin/hello hello.o
+                ''${FC:-gfortran} -o hello.o -c ${./hello.f90}
+                ''${FC:-gfortran} -o $out/bin/hello hello.o
                 $out/bin/hello
               '';
             };
@@ -117,9 +117,9 @@
               buildInputs = [ final.nix-fcache ];
               buildCommand = ''
                 mkdir -p $out/bin
-                gfortran -o submodule-math.o -c ${./submodule-math.F90}
-                gfortran -o submodule-main.o -c ${./submodule-main.F90}
-                gfortran -o $out/bin/hello submodule-main.o submodule-math.o
+                ''${FC:-gfortran} -o submodule-math.o -c ${./submodule-math.F90}
+                ''${FC:-gfortran} -o submodule-main.o -c ${./submodule-main.F90}
+                ''${FC:-gfortran} -o $out/bin/hello submodule-main.o submodule-math.o
                 $out/bin/hello
               '';
             };

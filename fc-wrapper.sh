@@ -42,7 +42,7 @@ for ((n = 0; n < $#; n++)); do
 done
 
 if [[ ! $isCompilation || ${#sources[*]} != 1 || ${sources[0]} =~ conftest ]]; then
-    echo "SKIP: ${sources[@]}" >&2
+    #echo "SKIP: ${sources[@]}" >&2
     exec @next@/bin/@program@ "$@"
 fi
 
@@ -146,7 +146,6 @@ echo "FINAL: $escapedArgs"
   }
 )' > /dev/null
 
-ls -l "$dest.link"
 cp "$dest.link" "$dest"
 rm -f "$dest.$ext" "$dest.link"
 rm -rf "$tmp_mod"
