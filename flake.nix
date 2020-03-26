@@ -71,23 +71,23 @@
         [ self.overlay
           (final: prev: {
 
-            geeqie = prev.geeqie.overrideDerivation (attrs: {
+            geeqie = prev.geeqie.overrideAttrs (attrs: {
               stdenv = final.nix-ccacheStdenv;
               requiredSystemFeatures = [ "recursive-nix" ];
             });
 
-            nixUnstable = prev.nixUnstable.overrideDerivation (attrs: {
+            nixUnstable = prev.nixUnstable.overrideAttrs (attrs: {
               stdenv = final.nix-ccacheStdenv;
               requiredSystemFeatures = [ "recursive-nix" ];
               doInstallCheck = false;
             });
 
-            hello = prev.hello.overrideDerivation (attrs: {
+            hello = prev.hello.overrideAttrs (attrs: {
               stdenv = final.nix-ccacheStdenv;
               requiredSystemFeatures = [ "recursive-nix" ];
             });
 
-            patchelf-new = prev.patchelf.overrideDerivation (attrs: {
+            patchelf-new = prev.patchelf.overrideAttrs (attrs: {
               stdenv = final.nix-ccacheStdenv;
               requiredSystemFeatures = [ "recursive-nix" ];
             });
@@ -96,10 +96,12 @@
               name = "trivial";
               requiredSystemFeatures = [ "recursive-nix" ];
               buildCommand = ''
+                set -x
                 mkdir -p $out/bin
-                $CXX -o hello.o -c ${./hello.cc} -DWHO='"World"' -std=c++11
+                $CXX -o hello.o -c ${./hello.cc} -DWHO='"World"' #-std=c++11
                 $CXX -o $out/bin/hello hello.o
                 $out/bin/hello
+                set +x
               '';
             };
 
@@ -128,15 +130,16 @@
               '';
             };
 
-            hdf5 = prev.hdf5.overrideDerivation (attrs: {
+            hdf5 = (prev.hdf5.override {
               stdenv = final.nix-ccacheStdenv;
+            }).overrideAttrs (attrs: {
               requiredSystemFeatures = [ "recursive-nix" ];
             });
 
             hdf5-fortran = (prev.hdf5-fortran.override {
-              gfortran = final.nix-fcache;
-            }).overrideDerivation (attrs: {
               stdenv = final.nix-ccacheStdenv;
+              gfortran = final.nix-fcache;
+            }).overrideAttrs (attrs: {
               requiredSystemFeatures = [ "recursive-nix" ];
             });
 
