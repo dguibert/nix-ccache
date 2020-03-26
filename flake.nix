@@ -18,16 +18,18 @@
         ''
           mkdir -p $out/bin
 
-          for i in gcc g++; do
-            substitute ${./cc-wrapper.sh} $out/bin/$i \
-              --subst-var-by next $next \
-              --subst-var-by program $i \
-              --subst-var shell \
-              --subst-var nix \
-              --subst-var system \
-              --subst-var out \
-              --subst-var binutils
-            chmod +x $out/bin/$i
+          for i in gcc g++ icc icpc; do
+            if test -e $next/bin/$i; then
+              substitute ${./cc-wrapper.sh} $out/bin/$i \
+                --subst-var-by next $next \
+                --subst-var-by program $i \
+                --subst-var shell \
+                --subst-var nix \
+                --subst-var system \
+                --subst-var out \
+                --subst-var binutils
+              chmod +x $out/bin/$i
+            fi
           done
 
           ln -s $next/bin/cpp $out/bin/cpp
@@ -45,16 +47,18 @@
         ''
           mkdir -p $out/bin
 
-          for i in gfortran; do
-            substitute ${./fc-wrapper.sh} $out/bin/$i \
-              --subst-var-by next $next \
-              --subst-var-by program $i \
-              --subst-var shell \
-              --subst-var nix \
-              --subst-var system \
-              --subst-var out \
-              --subst-var binutils
-            chmod +x $out/bin/$i
+          for i in gfortran ifort; do
+            if test -e $next/bin/$i; then
+              substitute ${./fc-wrapper.sh} $out/bin/$i \
+                --subst-var-by next $next \
+                --subst-var-by program $i \
+                --subst-var shell \
+                --subst-var nix \
+                --subst-var system \
+                --subst-var out \
+                --subst-var binutils
+              chmod +x $out/bin/$i
+            fi
           done
 
           ln -s $next/bin/cpp $out/bin/cpp

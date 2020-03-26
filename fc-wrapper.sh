@@ -52,11 +52,15 @@ if [[ -z $dest ]]; then
     dest="$(basename "$source" .c).o" # FIXME
 fi
 
-case $source in
-    *.f90)
+case "@program@$source" in
+    gfortran*.f90)
         ext=f90;;
-    *.F90)
+    gfortran*.F90)
         ext=f90;;
+    ifort*.f90)
+        ext=i90;;
+    ifort*.F90)
+        ext=i90;;
     *.c)
         ext=i;;
     *.cxx|*.cpp)
@@ -65,41 +69,63 @@ case $source in
         exit 11 # unimplemented extension
 esac
 
-echo "NIX-CCACHE: $@" >&2
+#echo "NIX-FCACHE: $@" >&2
 
-echo "preprocessing to $dest.$ext..." >&2
+#echo "preprocessing to $dest.$ext..." >&2
 
 escapedArgs='"-o" "${placeholder "out"}" "-c" '$(readlink -f "$dest.$ext")' '
 
 compiling_module=false
 
+#set -x
 case @program@ in
     gfortran)
     #gfortran: error: gfortran does not support -E without -cpp
     @next@/bin/@program@ -o "$dest.$ext" -E -cpp "$source" "${cppFlags[@]}"
     # INFO generate the module file
-    deps_line=$(@next@/bin/@program@ -cpp -MM "$dest.$ext" "${cppFlags[@]}")
-    deps_line=${deps_line//[$'\\\n']}
-    IFS=':'
-    deps=( $deps_line )
-    outputs=${deps[0]}
-    dependencies=${deps[1]}
-    #echo $outputs
     modules=
-    IFS=' '
-    for output in $outputs; do
-        echo $output
-        if [[ $output =~ \.mod$ ]]; then
-            modules+=" $output"
-        fi
-    done
     needed_modules=
-    for dep in $dependencies; do
-        if [[ $dep =~ \.mod$ ]]; then
-            needed_modules+=" $dep"
-            compiling_module=true
+    while IFS=: read -r targets deps
+    do
+      outputs=(${targets[@]})
+      dependencies=(${deps[@]})
+      for target in ${outputs}; do
+        if [[ $target =~ \.mod$ ]]; then
+            modules+=" $target"
         fi
-    done
+      done
+      IFS=' '
+      for dep in ${deps}; do
+          if [[ $dep =~ \.mod$ ]]; then
+              needed_modules+=" $dep"
+              compiling_module=true
+          fi
+      done
+    done < <(@next@/bin/@program@ -cpp -MM "$dest.$ext" "${cppFlags[@]}" | sed -z -e 's:\\\s*\n::g' -e 's:\n\n:\n:g') # remove \ and empty lines
+
+    ;;
+    ifort)
+    # INFO generate the module file
+    modules=
+    needed_modules=
+    while IFS=: read -r targets deps
+    do
+      outputs=(${targets[@]})
+      dependencies=(${deps[@]})
+      for target in ${outputs}; do
+        if [[ $target =~ \.mod$ ]]; then
+            modules+=" $target"
+        fi
+      done
+      IFS=' '
+      for dep in ${deps}; do
+          if [[ $dep =~ \.mod$ ]]; then
+              needed_modules+=" $dep"
+              compiling_module=true
+          fi
+      done
+    done < <(@next@/bin/@program@ -fpp -syntax-only -gen-dep "$source" "${cppFlags[@]}" | sed -z -e 's:\\\s*\n::g' -e 's:\n\n:\n:g') # remove \ and empty lines
+    mv $(basename $(basename $source .f90) .F90).$ext "$dest.$ext"
     ;;
     *)
     echo "Undefined compiler @program@" >&2
@@ -108,7 +134,7 @@ case @program@ in
 esac
 
 
-echo "compiling to $dest..."
+#echo "compiling to $dest..."
 #escapedArgs='"-o" "${placeholder "out"}" "-c" '$(readlink -f "$dest.$ext")' '
 
 # unique folder but same end name for multiple parallel compilations
@@ -130,7 +156,7 @@ for arg in "${compileFlags[@]}"; do
     escapedArgs+='" '
 done
 
-echo "FINAL: $escapedArgs"
+#echo "FINAL: $escapedArgs"
 
 
 # FIXME: add any store paths mentioned in the arguments (e.g. -B
