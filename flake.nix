@@ -7,10 +7,12 @@
 
   outputs = { self, nixpkgs }: {
 
-    overlay = final: prev: {
+    overlay = final: prev: with final; {
 
-      nix-ccache = final.runCommand "nix-ccache"
-        { next = final.stdenv.cc.cc;
+      nix-ccache = nixCCacheFun final.stdenv.cc.cc;
+
+      nixCCacheFun = compiler: final.runCommand "nix-ccache"
+        { next = compiler;
           binutils = final.binutils;
           nix = final.nix;
           requiredSystemFeatures = [ "recursive-nix" ];
@@ -38,8 +40,8 @@
       nix-ccacheStdenv = final.overrideCC final.stdenv
         (final.wrapCC final.nix-ccache);
 
-      nix-fcache = final.runCommand "nix-fcache"
-        { next = final.gfortran;
+      nixFCacheFun = compiler: final.runCommand "nix-fcache"
+        { next = compiler;
           binutils = final.binutils;
           nix = final.nix;
           requiredSystemFeatures = [ "recursive-nix" ];
@@ -63,6 +65,8 @@
 
           ln -s $next/bin/cpp $out/bin/cpp
         '';
+
+      nix-fcache = nixFCacheFun final.gfortran;
     };
 
     testPkgs = import nixpkgs {
