@@ -81,7 +81,8 @@ compiling_module=false
 case @program@ in
     gfortran)
     #gfortran: error: gfortran does not support -E without -cpp
-    @next@/bin/@program@ -o "$dest.$ext" -E -cpp "$source" "${cppFlags[@]}"
+    #-dI: Output '#include' directives in addition to the result of preprocessing.
+    @next@/bin/@program@ -o "$dest.$ext" -E -cpp -dI "$source" "${cppFlags[@]}"
     # INFO generate the module file
     modules=
     needed_modules=
