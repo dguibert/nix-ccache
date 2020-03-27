@@ -133,6 +133,7 @@ case @program@ in
     ;;
 esac
 
+#echo "NIX-FCACHE: $@" >&2
 
 #echo "compiling to $dest..."
 #escapedArgs='"-o" "${placeholder "out"}" "-c" '$(readlink -f "$dest.$ext")' '
@@ -162,7 +163,7 @@ done
 # FIXME: add any store paths mentioned in the arguments (e.g. -B
 # flags) to the input closure, or filter them?
 
-@nix@/bin/nix-build --verbose -o "$dest.link" -E '(
+@nix@/bin/nix-build --quiet -o "$dest.link" -E '(
   derivation {
     name = "fc";
     system = "@system@";
