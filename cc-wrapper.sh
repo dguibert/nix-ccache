@@ -67,8 +67,12 @@ fi
 escapedArgs='"-o" "${placeholder "out"}" "-c" '$(readlink -f "$dest.$ext")' '
 # FIXME: add any store paths mentioned in the arguments (e.g. -B
 # flags) to the input closure, or filter them?
-args_B="$(ls -d @next@/libexec/gcc/x86_64-unknown-linux-gnu/* 2>/dev/null || true)"
-args_B="${args_B:+"-B${args_B}"}"
+args_B="$(ls -d @next@/libexec/gcc/x86_64-unknown-linux-gnu/* 2>/dev/null || echo "")"
+if test -n "${args_B}"; then
+  args_B="${args_B:+"-B${args_B}"}"
+  escapedArgs=''$escapedArgs' "'$args_B'" '
+fi
+
 
 escapedArgs=''$escapedArgs' "'$args_B'" '
 
