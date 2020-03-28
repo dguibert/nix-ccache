@@ -73,16 +73,31 @@ esac
 
 #echo "preprocessing to $dest.$ext..." >&2
 
-escapedArgs='"-o" "${placeholder "out"}" "-c" '$(readlink -f "$dest.$ext")' '
-
 compiling_module=false
 
 #set -x
+old_IFS=$IFS
 case @program@ in
     gfortran)
-    #gfortran: error: gfortran does not support -E without -cpp
-    #-dI: Output '#include' directives in addition to the result of preprocessing.
-    @next@/bin/@program@ -o "$dest.$ext" -E -cpp -dI "$source" "${cppFlags[@]}"
+
+    # Find .h included via 'include "header.h"' (NB use " and ')
+    # gfortran is not able to recursively include these files
+    if grep -i "[^#]include\s*[\"']" "$source" >/dev/null; then
+      echo "$0: warning: include statements in source are not handled" >&2
+      exec @next@/bin/@program@ "$@"
+      #echo "==> REPLACE include $source"
+      #sed -i.orig -e "s:\s*[^#]include\s*[\"']\(.*\)[\"']:#include \"\1\":" "$source"
+    fi
+
+    @next@/bin/@program@ -o "$dest.$ext" -E -cpp "$source" "${cppFlags[@]}"
+
+    # FIXME: could call recursively the sed command, but it's simpler to fallback to directly call the compiler
+    if grep -i "[^#]include\s*[\"']" "$dest.$ext" >/dev/null; then
+      # Replace them with #include
+      echo "$0: warning: include statements in source are not handled" >&2
+      exec @next@/bin/@program@ "$@"
+    fi
+
     # INFO generate the module file
     modules=
     needed_modules=
@@ -133,24 +148,33 @@ case @program@ in
     exit 10
     ;;
 esac
+IFS=$old_IFS
 
-#echo "NIX-FCACHE: $@" >&2
 
 #echo "compiling to $dest..."
-#escapedArgs='"-o" "${placeholder "out"}" "-c" '$(readlink -f "$dest.$ext")' '
 
-# unique folder but same end name for multiple parallel compilations
+escapedArgs='"-o" "${placeholder "out"}" "-c" '$(readlink -f "$dest.$ext")' '
+
+# populate an included folder with the needed module files
+# iits unique folder but same end name for multiple parallel compilations
 # it does not change the hash
-tmp_mod=$(mktemp -d mod_XXX)/modules_path
-mkdir $tmp_mod
 if $compiling_module; then
-    for mod in $needed_modules; do
-        # TODO find modules in include paths as well
-        cp $mod $tmp_mod
-    done
+  tmp_mod=$(mktemp -d mod_XXX)/modules_path
+  mkdir $tmp_mod
+  for mod in $needed_modules; do
+      # TODO find modules in include paths as well
+      cp -v $mod $tmp_mod
+  done
+  modules_d="$(readlink -f $tmp_mod)"
+  escapedArgs+='"-I" '$modules_d' '
 fi
-modules_d="$(readlink -f $tmp_mod)"
-escapedArgs+='"-I" '$modules_d' '
+## FIXME: add any store paths mentioned in the arguments (e.g. -B
+## flags) to the input closure, or filter them?
+args_B="$(ls -d @next@/libexec/gcc/x86_64-unknown-linux-gnu/* 2>/dev/null || echo "")"
+if test -n "${args_B}"; then
+  args_B="${args_B:+"-B${args_B}"}"
+  escapedArgs=''$escapedArgs' "'$args_B'" '
+fi
 
 for arg in "${compileFlags[@]}"; do
     escapedArgs+='"'
@@ -160,22 +184,20 @@ done
 
 #echo "FINAL: $escapedArgs"
 
-
-# FIXME: add any store paths mentioned in the arguments (e.g. -B
-# flags) to the input closure, or filter them?
-
 @nix@/bin/nix-build --quiet -o "$dest.link" -E '(
   derivation {
     name = "fc";
     system = "@system@";
     builder = builtins.storePath "@next@/bin/@program@";
     extra = builtins.storePath "@binutils@";
-    args = [ '"$escapedArgs"' "-B@next@/libexec/gcc/x86_64-unknown-linux-gnu/8.3.0/" "-B@binutils@/bin" ]; # FIXME
+    args = [ '"$escapedArgs"' "-B@binutils@/bin" ]; # FIXME
   }
 )' > /dev/null
 
 cp "$dest.link" "$dest"
 rm -f "$dest.$ext" "$dest.link"
-rm -rf "$tmp_mod"
+if $compiling_module; then
+  rm -rf "$tmp_mod"
+fi
 
 exit 0
