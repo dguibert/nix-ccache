@@ -147,6 +147,13 @@
               requiredSystemFeatures = [ "recursive-nix" ];
             });
 
+            openmpi = (prev.openmpi.override {
+              stdenv = final.nix-ccacheStdenv;
+              gfortran = final.nix-fcache;
+            }).overrideAttrs (attrs: {
+              requiredSystemFeatures = [ "recursive-nix" ];
+            });
+
 
           })
         ];
