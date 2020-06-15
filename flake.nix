@@ -1,9 +1,7 @@
 {
   description = "A C/C++/Fortran compilation cache using recursive Nix";
 
-  edition = 201909;
-
-  inputs.nixpkgs.uri = "github:dguibert/nixpkgs/pu";
+  inputs.nixpkgs.url = "github:dguibert/nixpkgs/pu";
 
   outputs = { self, nixpkgs }: {
 

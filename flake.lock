@@ -1,11 +1,29 @@
 {
-    "inputs": {
-        "nixpkgs": {
-            "inputs": {},
-            "narHash": "sha256-QjPSmL1XDBwVYmYZuoLRK3TM+By2Tgz6ofL/ScV4lA0=",
-            "originalUrl": "github:dguibert/nixpkgs/pu",
-            "url": "github:dguibert/nixpkgs/c5edad7b1eec8f86f1fd16169a65084514065375"
-        }
+  "nodes": {
+    "nixpkgs": {
+      "info": {
+        "lastModified": 1592211330,
+        "narHash": "sha256-rlvWpHddDeX+Se9m+gDiKyagHtIXhC7KcP+eTDib+2M="
+      },
+      "locked": {
+        "owner": "dguibert",
+        "repo": "nixpkgs",
+        "rev": "a64d8dc78cd8da250fe362018d19468438568adf",
+        "type": "github"
+      },
+      "original": {
+        "owner": "dguibert",
+        "ref": "pu",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
     },
-    "version": 3
+    "root": {
+      "inputs": {
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 5
 }
